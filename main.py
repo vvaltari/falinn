@@ -78,6 +78,8 @@ async def update_secret(secret_id: PyObjectId, data: UpdateSecretModel):
     response_description='Delete a secret'    
 )
 async def delete_secret(secret_id: PyObjectId):
-    await secret_collection.delete_one({ '_id': ObjectId(secret_id) })
+    delete_result = await secret_collection.delete_one({ '_id': ObjectId(secret_id) })
+    if delete_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail=f"Secret {secret_id} not found")
     return
 
