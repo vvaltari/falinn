@@ -20,6 +20,18 @@ async def get_users():
     users = await user_collection.find().to_list()
     return UserCollection(users=users)
 
+@app.get(
+    '/users/{user_id}',
+    response_description='List a user',
+    response_model=UserModel,
+    response_model_by_alias=False
+)
+async def get_user(user_id: PyObjectId):
+    user = await user_collection.find_one(
+        { '_id': ObjectId(user_id) }
+    )
+    return user
+
 @app.post(
     '/users/',
     response_description='Create a user',
