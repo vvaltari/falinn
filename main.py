@@ -3,11 +3,19 @@ from database import db
 from bson import ObjectId
 from schemas import PyObjectId
 from pymongo import ReturnDocument
-from schemas import SecretModel, UpdateSecretModel, SecretCollection
+from schemas import SecretModel, UpdateSecretModel, SecretCollection, UserModel, UserCollection
 
 app = FastAPI()
 
+user_collection = db.get_collection('users')
 secret_collection = db.get_collection('secrets')
+
+@app.get(
+    '/users/',
+)
+async def get_users():
+    users = await user_collection.find().to_list()
+    return UserCollection(users=users)
 
 @app.get(
     '/secrets/',
