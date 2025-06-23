@@ -13,7 +13,7 @@ secret_collection = db.get_collection('secrets')
 @app.get(
     '/users/',
     response_description='List all users',
-    response_model=SecretCollection,
+    response_model=UserCollection,
     response_model_by_alias=False
 )
 async def get_users():
