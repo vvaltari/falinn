@@ -47,6 +47,18 @@ async def create_user(user: UserModel):
     )
     return created_user
 
+@app.delete(
+    '/users/{user_id}',
+    status_code=204,
+    response_description='Delete a user'
+)
+async def delete_user(user_id: PyObjectId):
+    delete_result = await user_collection.delete_one(
+        { '_id': ObjectId(user_id) }
+    )
+    if delete_result.deleted_count == 0:
+        return HTTPException(status_code=404, detail=f"User {user_id} not found")
+
 @app.get(
     '/secrets/',
     response_description='List all secrets',
