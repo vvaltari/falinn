@@ -16,6 +16,16 @@ class UserModel(BaseModel):
         arbitrary_types_allowed=True
     )
 
+class UpdateUserModel(BaseModel):
+    name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        json_encoders={ ObjectId: str }
+    )
+
 class UserCollection(BaseModel):
     users: list[UserModel]
 
