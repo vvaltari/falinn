@@ -3,7 +3,7 @@ from database import db
 from bson import ObjectId
 from schemas import PyObjectId
 from pymongo import ReturnDocument
-from schemas import SecretModel, UpdateSecretModel, SecretCollection, UserModel, UserCollection
+from schemas import SecretModel, UpdateSecretModel, SecretCollection, UserModel, UpdateUserModel, UserCollection
 
 app = FastAPI()
 
@@ -46,6 +46,32 @@ async def create_user(user: UserModel):
         { '_id': new_user.inserted_id }
     )
     return created_user
+
+@app.put(
+    '/users/{user_id}',
+    response_description='Update a user',
+    response_model=UserModel,
+    response_model_by_alias=False
+)
+async def update_user(user_id: PyObjectId, user: UpdateUserModel):
+    data = {k: v for k, v in user.model_dump(by_alias=True, mode='json').items() if v is not None}
+
+    if len(data) >= 1:
+        update_result = await user_collection.find_one_and_update(
+            {"_id": ObjectId(user_id)},
+            {"$set": data},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        if update_result is not None:
+            return update_result
+        else:
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+        
+    if (existing_user := await user_collection.find_one({"_id": user_id})) is not None:
+        return existing_user
+
+    raise HTTPException(status_code=404, detail=f"User {user_id} not found")    
 
 @app.delete(
     '/users/{user_id}',
