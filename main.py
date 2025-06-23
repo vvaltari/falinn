@@ -17,6 +17,21 @@ async def get_users():
     users = await user_collection.find().to_list()
     return UserCollection(users=users)
 
+@app.post(
+    '/users/',
+    response_description='Create a user',
+    response_model=UserModel,
+    response_model_by_alias=False
+)
+async def create_user(user: UserModel):
+    new_user = await user_collection.insert_one(
+        user.model_dump(exclude=['id'], mode='json')
+    )
+    created_user = await user_collection.find_one(
+        { '_id': new_user.inserted_id }
+    )
+    return created_user
+
 @app.get(
     '/secrets/',
     response_description='List all secrets',
