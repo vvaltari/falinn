@@ -5,16 +5,25 @@ from typing import Optional, Annotated
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
+class TokenModel(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenDataModel(BaseModel):
+    id: PyObjectId | None = None
+
 class UserModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias='_id', default=None)
     name: str = Field(...)
     last_name: str = Field(...)
     email: EmailStr = Field(...)
-    password: str = Field(...)
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True
     )
+
+class StoredUserModel(UserModel):
+    password: str
 
 class UpdateUserModel(BaseModel):
     name: Optional[str] = None
