@@ -2,7 +2,7 @@ import jwt
 import os
 from dotenv import load_dotenv
 from typing import Annotated
-from database import db
+from database.collections import user_collection
 from bson import ObjectId
 from fastapi import Depends, HTTPException, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer
@@ -21,7 +21,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 auth_router = APIRouter()
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
-user_collection = db.get_collection('users')
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

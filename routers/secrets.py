@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from database import secret_collection
+from database.collections import secret_collection
 from bson import ObjectId
 from pymongo import ReturnDocument
 from schemas.secrets import PyObjectId, SecretModel, UpdateSecretModel, SecretCollection

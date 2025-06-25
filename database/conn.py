@@ -9,6 +9,3 @@ DB_NAME = os.getenv('DB_NAME')
 
 client = AsyncIOMotorClient(MONGO_URI)
 db = client[DB_NAME]
-
-user_collection = db.get_collection('users')
-secret_collection = db.get_collection('secrets')

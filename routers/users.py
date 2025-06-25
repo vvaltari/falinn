@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from bson import ObjectId
 from pymongo import ReturnDocument
-from database import user_collection
+from database.collections import user_collection
 from schemas.users import PyObjectId, UserModel, StoredUserModel, UpdateUserModel, UserCollection
 from auth import hash_password
 
