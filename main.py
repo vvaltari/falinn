@@ -1,11 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from database import db
 from bson import ObjectId
+from auth import auth_router, hash_password
 from schemas import PyObjectId
 from pymongo import ReturnDocument
-from schemas import SecretModel, UpdateSecretModel, SecretCollection, UserModel, UpdateUserModel, UserCollection
+from schemas import SecretModel, UpdateSecretModel, SecretCollection, UserModel, StoredUserModel, UpdateUserModel, UserCollection
 
 app = FastAPI()
+
+app.include_router(auth_router)
 
 user_collection = db.get_collection('users')
 secret_collection = db.get_collection('secrets')
@@ -38,13 +41,12 @@ async def get_user(user_id: PyObjectId):
     response_model=UserModel,
     response_model_by_alias=False
 )
-async def create_user(user: UserModel):
-    new_user = await user_collection.insert_one(
-        user.model_dump(exclude=['id'], mode='json')
-    )
-    created_user = await user_collection.find_one(
-        { '_id': new_user.inserted_id }
-    )
+async def create_user(user: StoredUserModel):
+    hashed_password = hash_password(user.password)
+    user_data = user.model_dump(exclude=['id'], mode='json')
+    user_data['password'] = hashed_password
+    new_user = await user_collection.insert_one(user_data)
+    created_user = await user_collection.find_one({ '_id': new_user.inserted_id })
     return created_user
 
 @app.put(
