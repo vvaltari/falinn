@@ -3,7 +3,7 @@ from bson import ObjectId
 from pymongo import ReturnDocument
 from database.collections import user_collection
 from schemas.users import PyObjectId, UserModel, StoredUserModel, UpdateUserModel, UserCollection
-from auth import hash_password
+from auth.auth import hash_password
 
 users_router = APIRouter(prefix='/users')
 
