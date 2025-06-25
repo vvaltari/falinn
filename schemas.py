@@ -12,6 +12,10 @@ class TokenModel(BaseModel):
 class TokenDataModel(BaseModel):
     id: PyObjectId | None = None
 
+class LoginModel(BaseModel):
+    email: EmailStr
+    password: str
+
 class UserModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias='_id', default=None)
     name: str = Field(...)
