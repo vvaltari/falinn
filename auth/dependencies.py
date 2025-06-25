@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError
 from schemas.auth import TokenDataModel
 from schemas.users import StoredUserModel
-from auth import oauth2_scheme, SECRET_KEY, ALGORITHM
+from auth.auth import oauth2_scheme, SECRET_KEY, ALGORITHM
 from database.collections import user_collection
 
 async def validate_token(token: Annotated[str, Depends(oauth2_scheme)]):
