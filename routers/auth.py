@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from database import user_collection
-from schemas import LoginModel, TokenModel, StoredUserModel
+from schemas.auth import LoginModel, TokenModel
+from schemas.users import StoredUserModel
 from auth import verify_password, create_access_token
 
 auth_router = APIRouter(prefix='/auth')

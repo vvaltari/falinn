@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from database import secret_collection
 from bson import ObjectId
 from pymongo import ReturnDocument
-from schemas import PyObjectId, SecretModel, UpdateSecretModel, SecretCollection
+from schemas.secrets import PyObjectId, SecretModel, UpdateSecretModel, SecretCollection
 
 secrets_router = APIRouter(prefix='/secrets')
 

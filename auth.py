@@ -9,7 +9,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-from schemas import TokenModel, TokenDataModel, LoginModel, StoredUserModel
+from schemas.auth import TokenModel, TokenDataModel, LoginModel
+from schemas.users import StoredUserModel
 
 load_dotenv()
 
