@@ -25,6 +25,3 @@ class UpdateUserModel(BaseModel):
         arbitrary_types_allowed=True,
         json_encoders={ ObjectId: str }
     )
-
-class UserCollection(BaseModel):
-    users: list[UserModel]

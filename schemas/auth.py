@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
 from typing import Annotated
 

@@ -4,7 +4,7 @@ from bson import ObjectId
 from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError
 from schemas.auth import TokenDataModel
-from schemas.users import StoredUserModel
+from schemas.users import UserModel
 from auth.auth import oauth2_scheme, SECRET_KEY, ALGORITHM
 from database.collections import user_collection
 
@@ -25,4 +25,4 @@ async def validate_token(token: Annotated[str, Depends(oauth2_scheme)]):
     user = await user_collection.find_one({ '_id': ObjectId(token_data.id) })
     if user is None:
         raise credentials_exception
-    return StoredUserModel(**user)
+    return UserModel(**user)
