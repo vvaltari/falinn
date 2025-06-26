@@ -10,7 +10,3 @@ class TokenModel(BaseModel):
 
 class TokenDataModel(BaseModel):
     id: PyObjectId | None = None
-
-class LoginModel(BaseModel):
-    email: EmailStr = Field(...)
-    password: str = Field(...)

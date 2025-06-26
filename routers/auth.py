@@ -1,17 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from database.collections import user_collection
-from schemas.auth import LoginModel, TokenModel
+from schemas.auth import TokenModel
 from schemas.users import StoredUserModel
 from auth.auth import verify_password, create_access_token
+from fastapi.security import OAuth2PasswordRequestForm
 
-auth_router = APIRouter(prefix='/auth')
+auth_router = APIRouter(prefix='')
 
 @auth_router.post(
     '/token', 
     response_model=TokenModel
 )
-async def login(login_data: LoginModel):
-    user = await user_collection.find_one({ 'email': login_data.email })
+async def login(login_data: OAuth2PasswordRequestForm = Depends()):
+    user = await user_collection.find_one({ 'email': login_data.username })
     if user is None:
         raise HTTPException(
             status_code=401,
