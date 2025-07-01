@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
-from database.collections import user_collection
-from schemas.auth import TokenModel
-from schemas.users import UserModel
-from auth.auth import verify_password, hash_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
+from .schemas import TokenModel
+from .utils import verify_password, hash_password, create_access_token
+from src.users.collection import user_collection
+from src.users.schemas import UserModel
 
 auth_router = APIRouter(prefix='')
 
@@ -30,7 +30,8 @@ async def login(login_data: OAuth2PasswordRequestForm = Depends()):
     return TokenModel(access_token=access_token, token_type='bearer')
 
 @auth_router.post(
-    '/sign-in'
+    '/sign-in',
+    response_model=UserModel
 )
 async def sign_in(data: UserModel):
     hashed_password = hash_password(data.password)

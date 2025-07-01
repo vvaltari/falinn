@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from pymongo import ReturnDocument
-from schemas.secrets import PyObjectId, SecretModel, UpdateSecretModel, SecretCollection
-from schemas.users import UserModel
-from database.collections import secret_collection
-from auth.dependencies import validate_token
+from .schemas import PyObjectId, SecretModel, UpdateSecretModel, SecretCollection
+from .collection import secret_collection
+from src.users.schemas import UserModel
+from src.auth.dependencies import validate_token
 
 secrets_router = APIRouter(prefix='/secrets')
 

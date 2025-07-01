@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from pymongo import ReturnDocument
-from database.collections import user_collection
-from schemas.users import UserModel, UpdateUserModel
-from auth.auth import hash_password
-from auth.dependencies import validate_token
+from .collection import user_collection
+from .schemas import UserModel, UpdateUserModel
+from src.auth.utils import hash_password
+from src.auth.dependencies import validate_token
 
 users_router = APIRouter(prefix='/users')
 
