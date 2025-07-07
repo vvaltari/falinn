@@ -6,9 +6,9 @@ from jwt.exceptions import InvalidTokenError
 from .schemas import TokenDataModel
 from .config import oauth2_scheme, SECRET_KEY, ALGORITHM
 from src.users.schemas import UserModel
-from src.users.collection import user_collection
+from src.users.dependencies import get_user_collection
 
-async def validate_token(token: Annotated[str, Depends(oauth2_scheme)]):
+async def validate_token(token: Annotated[str, Depends(oauth2_scheme)], user_collection = Depends(get_user_collection)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',

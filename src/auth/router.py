@@ -4,6 +4,7 @@ from .schemas import TokenModel
 from .utils import verify_password, hash_password, create_access_token
 from src.users.collection import user_collection
 from src.users.schemas import UserModel
+from src.users.dependencies import get_user_collection
 
 auth_router = APIRouter(prefix='')
 
@@ -31,9 +32,10 @@ async def login(login_data: OAuth2PasswordRequestForm = Depends()):
 
 @auth_router.post(
     '/sign-in',
-    response_model=UserModel
+    response_model=UserModel,
+    status_code=201
 )
-async def sign_in(data: UserModel):
+async def sign_in(data: UserModel, user_collection = Depends(get_user_collection)):
     hashed_password = hash_password(data.password)
     user_data = data.model_dump(exclude=['id'], mode='json')
     user_data['password'] = hashed_password

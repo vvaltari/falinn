@@ -3,6 +3,7 @@ from bson import ObjectId
 from pymongo import ReturnDocument
 from .collection import user_collection
 from .schemas import UserModel, UpdateUserModel
+from .dependencies import get_user_collection
 from src.auth.utils import hash_password
 from src.auth.dependencies import validate_token
 
@@ -23,9 +24,9 @@ async def get_user(user: UserModel = Depends(validate_token)):
     response_model=UserModel,
     response_model_by_alias=False
 )
-async def update_user(data: UpdateUserModel, user: UserModel = Depends(validate_token)):
+async def update_user(data: UpdateUserModel, user_collection = Depends(get_user_collection), user: UserModel = Depends(validate_token)):    
     user_data = {k: v for k, v in data.model_dump(by_alias=True, mode='json').items() if v is not None}
-    password = user_data['password']
+    password = user_data.get('password', None)
 
     if password:
         password = hash_password(password)
@@ -43,7 +44,7 @@ async def update_user(data: UpdateUserModel, user: UserModel = Depends(validate_
         else:
             raise HTTPException(status_code=404, detail=f"User {user.id} not found")
         
-    if (existing_user := await user_collection.find_one({"_id": user.id})) is not None:
+    if (existing_user := await user_collection.find_one({"_id": ObjectId(user.id)})) is not None:
         return existing_user
 
     raise HTTPException(status_code=404, detail=f"User {user.id} not found")
@@ -53,9 +54,10 @@ async def update_user(data: UpdateUserModel, user: UserModel = Depends(validate_
     status_code=204,
     response_description='Delete a user'
 )
-async def delete_user(user: UserModel = Depends(validate_token)):
+async def delete_user(user: UserModel = Depends(validate_token), user_collection = Depends(get_user_collection)):
     delete_result = await user_collection.delete_one(
         { '_id': ObjectId(user.id) }
     )
+
     if delete_result.deleted_count == 0:
-        return HTTPException(status_code=404, detail=f"User {user.id} not found")
+        raise HTTPException(status_code=404, detail=f"User {user.id} not found")
