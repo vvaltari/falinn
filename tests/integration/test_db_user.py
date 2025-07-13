@@ -1,67 +1,9 @@
-import os
-
-from motor.motor_asyncio import AsyncIOMotorClient
-from bson import ObjectId
-
 import pytest
-import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-
-from src.dependencies import get_db
-
-from src.users.schemas import UserModel
-
-from src.auth.utils import hash_password, verify_password, create_access_token
-from src.auth.dependencies import validate_token
-
+from tests.utils import make_user_payload
 from src.main import app
-
-
-
-MONGO_URI = os.getenv('MONGO_URI')
-TEST_DB_NAME = os.getenv('TEST_DB_NAME')
-
-@pytest.fixture(scope='function')
-def db_client():
-    client = AsyncIOMotorClient(MONGO_URI)
-    yield client
-    client.close()
-
-@pytest.fixture(scope='function')
-def test_db(db_client):
-    return db_client[TEST_DB_NAME]
-
-@pytest_asyncio.fixture(autouse=True)
-async def clear_db(test_db):
-    for collection_name in await test_db.list_collection_names():
-        await test_db[collection_name].delete_many({})
-
-@pytest_asyncio.fixture
-async def test_user(test_db):
-    user_data = {
-        '_id': ObjectId(),
-        'name': 'Test',
-        'last_name': 'Test',
-        'email': 'test@example.com',
-        'unhashed_password': 'test_password'
-    }
-
-    user_data['password'] = hash_password(user_data['unhashed_password'])
-
-    await test_db['users'].insert_one(user_data)
-    return user_data
-
-@pytest_asyncio.fixture(autouse=True)
-async def test_token(test_user):
-    token = create_access_token({ 'sub': str(test_user['_id']) })
-    return token
-
-@pytest_asyncio.fixture
-async def client(test_db):
-    app.dependency_overrides[get_db] = lambda: test_db
-    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as ac:
-        yield ac
-    app.dependency_overrides.clear()
+from src.users.schemas import UserModel
+from src.auth.utils import verify_password
+from src.auth.dependencies import validate_token
 
 @pytest.mark.asyncio
 async def test_me(client, test_token):
@@ -91,11 +33,7 @@ async def test_me_deleted_user_with_valid_token(client, test_db, test_user, test
 
 @pytest.mark.asyncio
 async def test_update_user(client, test_db, test_user, test_token):
-    data = {
-        'name': 'Update test',
-        'last_name': 'Update test',
-        'email': 'updatetest@example.com'
-    }
+    data = make_user_payload({'email': 'updatetest@example.com'}, exclude=['password'])
 
     headers = { 'Authorization': f'Bearer {test_token}'}
 
@@ -111,9 +49,7 @@ async def test_update_user(client, test_db, test_user, test_token):
 
 @pytest.mark.asyncio
 async def test_update_user_with_different_password(client, test_db, test_user, test_token):
-    data = {
-        'password': 'test_password',
-    }
+    data = make_user_payload(override={'password': 'test_password'}, exclude=['name', 'last_name', 'email'])
 
     headers = { 'Authorization': f'Bearer {test_token}'}
 
@@ -146,11 +82,7 @@ async def test_update_user_not_found(client, test_token, test_user, test_db):
     app.dependency_overrides[validate_token] = lambda: UserModel(**test_user)
     await test_db['users'].delete_one({ '_id': test_user['_id'] })
 
-    data = {
-        'name': 'Update test',
-        'last_name': 'Update test',
-        'email': 'updatetest@example.com'
-    }
+    data = make_user_payload()
 
     headers = { 'Authorization': f'Bearer {test_token}' }
 
