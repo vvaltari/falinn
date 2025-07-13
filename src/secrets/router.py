@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from pymongo import ReturnDocument
+
 from .schemas import PyObjectId, SecretModel, UpdateSecretModel, SecretCollection
-from .collection import secret_collection
+from .dependencies import get_secret_collection
+
 from src.users.schemas import UserModel
 from src.auth.dependencies import validate_token
 
@@ -14,7 +16,7 @@ secrets_router = APIRouter(prefix='/secrets')
     response_model=SecretCollection,
     response_model_by_alias=False
 )
-async def get_secrets(user: UserModel = Depends(validate_token)):
+async def get_secrets(user: UserModel = Depends(validate_token), secret_collection = Depends(get_secret_collection)):
     secrets = await secret_collection.find({ 'owner_id': ObjectId(user.id) }).to_list()
     return SecretCollection(secrets=secrets)
 
@@ -24,7 +26,7 @@ async def get_secrets(user: UserModel = Depends(validate_token)):
     response_model=SecretModel,
     response_model_by_alias=False
 )
-async def get_secret(secret_id: PyObjectId, user: UserModel = Depends(validate_token)):
+async def get_secret(secret_id: PyObjectId, user: UserModel = Depends(validate_token), secret_collection = Depends(get_secret_collection)):
     secret = await secret_collection.find_one({ '_id': ObjectId(secret_id), 'owner_id': ObjectId(user.id) })
     return secret
 
@@ -35,13 +37,14 @@ async def get_secret(secret_id: PyObjectId, user: UserModel = Depends(validate_t
     response_model=SecretModel,
     response_model_by_alias=False
 )
-async def create_secret(data: SecretModel, user: UserModel = Depends(validate_token)):
+async def create_secret(data: SecretModel, user: UserModel = Depends(validate_token), secret_collection = Depends(get_secret_collection)):
     secret = data.model_dump(exclude=['id'], mode='json')
     secret['owner_id'] = ObjectId(user.id)
     new_secret = await secret_collection.insert_one(secret)
-    created_secret = await secret_collection.find_one(
-        { '_id': new_secret.inserted_id }
-    )
+    created_secret = await secret_collection.find_one({ 
+        '_id': new_secret.inserted_id,
+        'owner_id': ObjectId(user.id)
+    })
     return created_secret
 
 @secrets_router.put(
@@ -50,33 +53,33 @@ async def create_secret(data: SecretModel, user: UserModel = Depends(validate_to
     response_model=SecretModel,
     response_model_by_alias=False
 )
-async def update_secret(secret_id: PyObjectId, data: UpdateSecretModel, user: UserModel = Depends(validate_token)):
+async def update_secret(secret_id: PyObjectId, data: UpdateSecretModel, user: UserModel = Depends(validate_token), secret_collection = Depends(get_secret_collection)):
     secret = {k: v for k, v in data.model_dump(by_alias=True, mode='json').items() if v is not None}
 
     if len(secret) >= 1:
         update_result = await secret_collection.find_one_and_update(
-            {"_id": ObjectId(secret_id)},
-            {"$set": secret},
+            {'_id': ObjectId(secret_id), 'owner_id': ObjectId(user.id)},
+            {'$set': secret},
             return_document=ReturnDocument.AFTER,
         )
 
         if update_result is not None:
             return update_result
         else:
-            raise HTTPException(status_code=404, detail=f"Secret {secret_id} not found")
+            raise HTTPException(status_code=404, detail=f'Secret {secret_id} not found')
         
-    if (existing_secret := await secret_collection.find_one({"_id": secret_id})) is not None:
+    if (existing_secret := await secret_collection.find_one({'_id': ObjectId(secret_id), 'owner_id': ObjectId(user.id) })) is not None:
         return existing_secret
 
-    raise HTTPException(status_code=404, detail=f"Secret {secret_id} not found")
+    raise HTTPException(status_code=404, detail=f'Secret {secret_id} not found')
 
 @secrets_router.delete(
     '/{secret_id}',
     status_code=204,
     response_description='Delete a secret'    
 )
-async def delete_secret(secret_id: PyObjectId, user: UserModel = Depends(validate_token)):
-    delete_result = await secret_collection.delete_one({ '_id': ObjectId(secret_id) })
+async def delete_secret(secret_id: PyObjectId, user: UserModel = Depends(validate_token), secret_collection = Depends(get_secret_collection)):
+    delete_result = await secret_collection.delete_one({ '_id': ObjectId(secret_id), 'owner_id': ObjectId(user.id) })
     if delete_result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail=f"Secret {secret_id} not found")
+        raise HTTPException(status_code=404, detail=f'Secret {secret_id} not found')
     return

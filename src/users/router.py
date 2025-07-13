@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from pymongo import ReturnDocument
-from .collection import user_collection
 from .schemas import UserModel, UpdateUserModel
 from .dependencies import get_user_collection
 from src.auth.utils import hash_password
