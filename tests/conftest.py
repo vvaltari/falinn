@@ -6,6 +6,8 @@ import pytest
 import pytest_asyncio
 from src.dependencies import get_db
 from src.auth.utils import hash_password, create_access_token
+from src.auth.dependencies import validate_token
+from src.users.schemas import UserModel
 from src.main import app
 
 MONGO_URI = os.getenv('MONGO_URI')
@@ -41,10 +43,37 @@ async def test_user(test_db):
     await test_db['users'].insert_one(user_data)
     return user_data
 
+@pytest_asyncio.fixture
+async def test_secret(test_db, test_user):
+    secret_data = {
+        '_id': ObjectId(),
+        'name': 'string',
+        'content': {
+            'type': 'login',
+            'email': 'test@example.com',
+            'password': 'string',
+            'sites': [ 
+                'https://example.com/',
+                'https://example.com/'
+            ]
+        },
+        'description': 'string',
+        'owner_id': test_user['_id']
+    }
+
+    test_db['secrets'].insert_one(secret_data)
+    return secret_data
+
 @pytest_asyncio.fixture(autouse=True)
 async def test_token(test_user):
     token = create_access_token({ 'sub': str(test_user['_id']) })
     return token
+
+@pytest_asyncio.fixture
+async def override_authentication(test_user):
+    app.dependency_overrides[validate_token] = lambda: UserModel(**test_user)
+    yield
+    del app.dependency_overrides[validate_token]
 
 @pytest_asyncio.fixture
 async def client(test_db):
