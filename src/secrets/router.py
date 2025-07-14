@@ -27,7 +27,17 @@ async def get_secrets(user: UserModel = Depends(validate_token), secret_collecti
     response_model_by_alias=False
 )
 async def get_secret(secret_id: PyObjectId, user: UserModel = Depends(validate_token), secret_collection = Depends(get_secret_collection)):
-    secret = await secret_collection.find_one({ '_id': ObjectId(secret_id), 'owner_id': ObjectId(user.id) })
+    if not ObjectId.is_valid(secret_id):
+        raise HTTPException(status_code=400, detail='Invalid ID format')
+    
+    secret = await secret_collection.find_one({ 
+        '_id': ObjectId(secret_id), 
+        'owner_id': ObjectId(user.id)
+    })
+
+    if not secret:
+        raise HTTPException(status_code=404, detail='Secret not found')
+
     return secret
 
 @secrets_router.post(
