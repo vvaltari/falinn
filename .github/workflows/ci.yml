@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+    env:
+      SECRET_KEY: secret-key
+      MONGO_URI: mongodb://localhost:27017/
+      TEST_DB_NAME: test-db
+
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+      
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Dependencies installation
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        run: | 
+          pytest
+      
+      - name: Image build
+        run: | 
+          docker build -t falinn:latest .
