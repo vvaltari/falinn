@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: falinn-app
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - MONGO_URI=${MONGO_URI}
+      - DB_NAME=${DB_NAME}
+      - TEST_DB_NAME=${TEST_DB_NAME}
+    volumes:
+      - ./src:/falinn/src
+  
+  db:
+    image: mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - db_data:/data/db
+
+volumes:
+  db_data:
