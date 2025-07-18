@@ -21,7 +21,7 @@ jobs:
       
     env:
       SECRET_KEY: secret-key
-      MONGO_URI: mongodb://localhost:27017/
+      DB_URI: mongodb://localhost:27017/
       TEST_DB_NAME: test-db
 
     steps:

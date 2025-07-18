@@ -9,7 +9,7 @@ services:
       - db
     environment:
       - SECRET_KEY=${SECRET_KEY}
-      - MONGO_URI=${MONGO_URI}
+      - DB_URI=${DB_URI}
       - DB_NAME=${DB_NAME}
       - TEST_DB_NAME=${TEST_DB_NAME}
     volumes:
@@ -20,6 +20,12 @@ services:
     restart: unless-stopped
     ports:
       - "27018:27017"
+    healthcheck:
+      test: ["CMD", "mongosh --eval 'db.runCommand({ ping: 1 })'"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     volumes:
       - db_data:/data/db
 

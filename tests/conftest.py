@@ -4,24 +4,24 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from httpx import ASGITransport, AsyncClient
 import pytest
 import pytest_asyncio
-from src.dependencies import get_db
+from src.db import get_db
 from src.auth.utils import hash_password, create_access_token
 from src.auth.dependencies import validate_token
 from src.users.schemas import UserModel
 from src.main import app
 
-MONGO_URI = os.getenv('MONGO_URI')
-TEST_DB_NAME = os.getenv('TEST_DB_NAME')
-
 @pytest.fixture(scope='function')
 def db_client():
-    client = AsyncIOMotorClient(MONGO_URI)
+    DB_URI = os.getenv('DB_URI')
+    client = AsyncIOMotorClient(DB_URI)
     yield client
     client.close()
 
 @pytest.fixture(scope='function')
 def test_db(db_client):
-    return db_client[TEST_DB_NAME]
+    TEST_DB_NAME = os.getenv('TEST_DB_NAME')
+    db = db_client[TEST_DB_NAME]
+    return db
 
 @pytest_asyncio.fixture(autouse=True)
 async def clear_db(test_db):
