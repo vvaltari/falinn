@@ -1,4 +1,5 @@
 import os
+import uuid
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 from httpx import ASGITransport, AsyncClient
@@ -10,31 +11,33 @@ from src.auth.dependencies import validate_token
 from src.users.schemas import UserModel
 from src.main import app
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def db_client():
     DB_URI = os.getenv('DB_URI')
     client = AsyncIOMotorClient(DB_URI)
     yield client
     client.close()
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def test_db(db_client):
     TEST_DB_NAME = os.getenv('TEST_DB_NAME')
     db = db_client[TEST_DB_NAME]
     return db
 
-@pytest_asyncio.fixture(autouse=True)
-async def clear_db(test_db):
-    for collection_name in await test_db.list_collection_names():
-        await test_db[collection_name].delete_many({})
+# @pytest_asyncio.fixture(autouse=True)
+# async def clear_db(test_db):
+#     for collection_name in await test_db.list_collection_names():
+#         await test_db[collection_name].delete_many({})
 
 @pytest_asyncio.fixture
 async def test_user(test_db):
+    random_uuid = str(uuid.uuid4()) 
+
     user_data = {
         '_id': ObjectId(),
         'name': 'Test',
         'last_name': 'Test',
-        'email': 'test@example.com',
+        'email': f'{random_uuid}@example.com',
         'unhashed_password': 'test_password'
     }
 
@@ -61,10 +64,10 @@ async def test_secret(test_db, test_user):
         'owner_id': test_user['_id']
     }
 
-    test_db['secrets'].insert_one(secret_data)
+    await test_db['secrets'].insert_one(secret_data)
     return secret_data
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture
 async def test_token(test_user):
     token = create_access_token({ 'sub': str(test_user['_id']) })
     return token
